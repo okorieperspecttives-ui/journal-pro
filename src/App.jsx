@@ -1,10 +1,11 @@
 import React, { useState } from "react";
+import Dashboard from "./components/Dashboard";
 
 function App() {
   return (
     <>
-      <div className="w-full h-full">
-        <h1 className="text-white bg-black">Journal Pro</h1>
+      <div className="w-screen h-screen bg-black transparent_bg">
+        <Dashboard />
       </div>
     </>
   );
