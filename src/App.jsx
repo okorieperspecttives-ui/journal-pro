@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import Dashboard from "./components/Dashboard";
+import { Routes, Route } from "react-router-dom";
+import AuthPage from "./pages/AuthPage";
 
 function App() {
   return (
     <>
       <div className="w-screen h-screen bg-black transparent_bg">
-        <Dashboard />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/auth" element={<AuthPage />} />
+        </Routes>
       </div>
     </>
   );
