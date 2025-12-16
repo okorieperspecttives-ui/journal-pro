@@ -8,6 +8,9 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [entries, setEntries] = useState([]);
+  const [formModal, setFormModal] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -19,7 +22,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loadingUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loadingUser,
+        selectedDate,
+        setSelectedDate,
+        entries,
+        setEntries,
+        formModal,
+        setFormModal,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
