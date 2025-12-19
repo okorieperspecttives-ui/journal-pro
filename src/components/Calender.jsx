@@ -20,16 +20,6 @@ const Calendar = () => {
 
   const handleEntryClick = async (entry) => {
     try {
-      // fetch the clicked trade
-      const { data, error } = await supabase
-        .from("trades")
-        .select("*")
-        .eq("id", entry.id)
-        .single();
-
-      if (error) throw error;
-      setSelectedEntry(data);
-
       // update the current user's preferences
       const { error: updateError } = await supabase
         .from("users")

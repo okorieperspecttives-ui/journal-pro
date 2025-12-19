@@ -26,6 +26,7 @@ const Dashboard = () => {
 
   if (!loadingUser && !user)
     return (
+  
       <>
         <div className="container h-full w-full mx-auto flex items-center justify-center">
           <Link to="/auth">
