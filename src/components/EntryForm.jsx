@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { supabase } from "../config/supabaseClient";
+import { DeleteIcon } from "lucide-react";
+import { useAuthContext } from "../context/UseAuthContext";
 
 const symbols = [
   // Major FX pairs
@@ -56,7 +59,14 @@ const ChipList = ({ items, onRemove }) => (
 );
 
 // Reusable add-input block
-const AddInput = ({ label, placeholder, tempValue, setTempValue, onAdd }) => (
+const AddInput = ({
+  label,
+  placeholder,
+  tempValue,
+  setTempValue,
+  onAdd,
+  required,
+}) => (
   <div>
     <label className="block mb-1 font-semibold">{label}</label>
     <div className="flex gap-2">
@@ -65,6 +75,7 @@ const AddInput = ({ label, placeholder, tempValue, setTempValue, onAdd }) => (
         onChange={(e) => setTempValue(e.target.value)}
         className="flex-1 p-2 rounded bg-gray-700 text-gray-100"
         placeholder={placeholder}
+        required={required}
       />
       <button
         type="button"
@@ -80,6 +91,8 @@ const AddInput = ({ label, placeholder, tempValue, setTempValue, onAdd }) => (
 const EntryForm = ({ onSubmit }) => {
   // Scalar
   const [symbol, setSymbol] = useState("");
+
+  const { setFormModal } = useAuthContext();
 
   // Arrays
   const [confluences, setConfluences] = useState([]);
@@ -110,145 +123,170 @@ const EntryForm = ({ onSubmit }) => {
     setter((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
 
     const payload = {
       symbol,
-      confluences,
-      entry_models: entryModels,
-      moods,
-      observations,
-      news_events: newsEvents,
-      buyside_liquidity: buysideLiquidity,
-      sellside_liquidity: sellsideLiquidity,
+      confluences: confluences.length ? confluences : [],
+      entry_models: entryModels.length ? entryModels : [],
+      moods: moods.length ? moods : [],
+      observations: observations.length ? observations : [],
+      news_events: newsEvents.length ? newsEvents : [],
+      buyside_liquidity: buysideLiquidity.length ? buysideLiquidity : [],
+      sellside_liquidity: sellsideLiquidity.length ? sellsideLiquidity : [],
+      created_at: today, // ✅ set explicitly
     };
 
-    if (onSubmit) {
-      onSubmit(payload);
+    const { data, error } = await supabase.from("trades").insert([payload]);
+
+    if (error) {
+      console.error("Error inserting trade:", error.message);
     } else {
-      console.log("EntryForm payload:", payload);
+      console.log("Trade saved:", data);
+
+      // Reset form
+      setSymbol("");
+      setConfluences([]);
+      setEntryModels([]);
+      setMoods([]);
+      setObservations([]);
+      setNewsEvents([]);
+      setBuysideLiquidity([]);
+      setSellsideLiquidity([]);
     }
+
+    setFormModal(false);
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-4 bg-gray-800 text-gray-100 rounded-md space-y-6 scrollbar-hide w-[90%] h-[90%] overflow-y-scroll"
+      className="p-4 bg-black/90 text-gray-100 rounded-md space-y-6 scrollbar-hide h-screen w-screen top-0 left-0 fixed overflow-y-scroll mb-0"
     >
-      {/* Symbol */}
-      <div>
-        <label className="block mb-1 font-semibold">Symbol</label>
-        <select
-          value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          className="w-full p-2 rounded bg-gray-700 text-gray-100"
-        >
-          <option value="">Select a symbol</option>
-          {symbols.map((sym) => (
-            <option key={sym} value={sym}>
-              {sym}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="p-4 bg-transparent text-gray-100 mx-auto rounded-md space-y-6 scrollbar-hide w-[90%] max-w-[600px] h-[90%] overflow-y-scroll mb-0">
+        {/* Symbol */}
+        <div>
+          <label className="flex items-center justify-between mb-1 font-semibold">
+            <span>Symbol</span>
+            <span className="cursor-pointer">
+              <DeleteIcon onClick={() => setFormModal(false)} />
+            </span>
+          </label>
+          <select
+            value={symbol}
+            onChange={(e) => setSymbol(e.target.value)}
+            className="w-full p-2 rounded bg-gray-700 text-gray-100"
+            required={true}
+          >
+            <option value="">Select a symbol</option>
+            {symbols.map((sym) => (
+              <option key={sym} value={sym}>
+                {sym}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* Confluences */}
-      <AddInput
-        label="Confluences"
-        placeholder="Type a confluence"
-        tempValue={tempConfluence}
-        setTempValue={setTempConfluence}
-        onAdd={(v) => addItem(v, setConfluences, setTempConfluence)}
-      />
-      <ChipList
-        items={confluences}
-        onRemove={(idx) => removeItem(idx, setConfluences)}
-      />
+        {/* Confluences */}
+        <AddInput
+          label="Confluences"
+          placeholder="Type a confluence"
+          tempValue={tempConfluence}
+          setTempValue={setTempConfluence}
+          onAdd={(v) => addItem(v, setConfluences, setTempConfluence)}
+        />
+        <ChipList
+          items={confluences}
+          onRemove={(idx) => removeItem(idx, setConfluences)}
+        />
 
-      {/* Entry model */}
-      <AddInput
-        label="Entry model"
-        placeholder="Type an entry model"
-        tempValue={tempEntryModel}
-        setTempValue={setTempEntryModel}
-        onAdd={(v) => addItem(v, setEntryModels, setTempEntryModel)}
-      />
-      <ChipList
-        items={entryModels}
-        onRemove={(idx) => removeItem(idx, setEntryModels)}
-      />
+        {/* Entry model */}
+        <AddInput
+          label="Entry model"
+          placeholder="Type an entry model"
+          tempValue={tempEntryModel}
+          setTempValue={setTempEntryModel}
+          onAdd={(v) => addItem(v, setEntryModels, setTempEntryModel)}
+        />
+        <ChipList
+          items={entryModels}
+          onRemove={(idx) => removeItem(idx, setEntryModels)}
+        />
 
-      {/* Mood */}
-      <AddInput
-        label="Mood"
-        placeholder="Type a mood"
-        tempValue={tempMood}
-        setTempValue={setTempMood}
-        onAdd={(v) => addItem(v, setMoods, setTempMood)}
-      />
-      <ChipList items={moods} onRemove={(idx) => removeItem(idx, setMoods)} />
+        {/* Mood */}
+        <AddInput
+          label="Mood"
+          placeholder="Type a mood"
+          tempValue={tempMood}
+          setTempValue={setTempMood}
+          onAdd={(v) => addItem(v, setMoods, setTempMood)}
+        />
+        <ChipList items={moods} onRemove={(idx) => removeItem(idx, setMoods)} />
 
-      {/* Observations */}
-      <AddInput
-        label="Observations"
-        placeholder="Type an observation"
-        tempValue={tempObservation}
-        setTempValue={setTempObservation}
-        onAdd={(v) => addItem(v, setObservations, setTempObservation)}
-      />
-      <ChipList
-        items={observations}
-        onRemove={(idx) => removeItem(idx, setObservations)}
-      />
+        {/* Observations */}
+        <AddInput
+          label="Observations"
+          placeholder="Type an observation"
+          tempValue={tempObservation}
+          setTempValue={setTempObservation}
+          onAdd={(v) => addItem(v, setObservations, setTempObservation)}
+        />
+        <ChipList
+          items={observations}
+          onRemove={(idx) => removeItem(idx, setObservations)}
+        />
 
-      {/* News events */}
-      <AddInput
-        label="News events"
-        placeholder="Type a news event"
-        tempValue={tempNewsEvent}
-        setTempValue={setTempNewsEvent}
-        onAdd={(v) => addItem(v, setNewsEvents, setTempNewsEvent)}
-      />
-      <ChipList
-        items={newsEvents}
-        onRemove={(idx) => removeItem(idx, setNewsEvents)}
-      />
+        {/* News events */}
+        <AddInput
+          label="News events"
+          placeholder="Type a news event"
+          tempValue={tempNewsEvent}
+          setTempValue={setTempNewsEvent}
+          onAdd={(v) => addItem(v, setNewsEvents, setTempNewsEvent)}
+        />
+        <ChipList
+          items={newsEvents}
+          onRemove={(idx) => removeItem(idx, setNewsEvents)}
+        />
 
-      {/* Buyside liquidity */}
-      <AddInput
-        label="Buyside liquidity"
-        placeholder="Type a buyside liquidity note"
-        tempValue={tempBuyside}
-        setTempValue={setTempBuyside}
-        onAdd={(v) => addItem(v, setBuysideLiquidity, setTempBuyside)}
-      />
-      <ChipList
-        items={buysideLiquidity}
-        onRemove={(idx) => removeItem(idx, setBuysideLiquidity)}
-      />
+        {/* Buyside liquidity */}
+        <AddInput
+          label="Buyside liquidity"
+          placeholder="Type a buyside liquidity note"
+          tempValue={tempBuyside}
+          setTempValue={setTempBuyside}
+          onAdd={(v) => addItem(v, setBuysideLiquidity, setTempBuyside)}
+        />
+        <ChipList
+          items={buysideLiquidity}
+          onRemove={(idx) => removeItem(idx, setBuysideLiquidity)}
+        />
 
-      {/* Sellside liquidity */}
-      <AddInput
-        label="Sellside liquidity"
-        placeholder="Type a sellside liquidity note"
-        tempValue={tempSellside}
-        setTempValue={setTempSellside}
-        onAdd={(v) => addItem(v, setSellsideLiquidity, setTempSellside)}
-      />
-      <ChipList
-        items={sellsideLiquidity}
-        onRemove={(idx) => removeItem(idx, setSellsideLiquidity)}
-      />
+        {/* Sellside liquidity */}
+        <AddInput
+          label="Sellside liquidity"
+          placeholder="Type a sellside liquidity note"
+          tempValue={tempSellside}
+          setTempValue={setTempSellside}
+          onAdd={(v) => addItem(v, setSellsideLiquidity, setTempSellside)}
+        />
+        <ChipList
+          items={sellsideLiquidity}
+          onRemove={(idx) => removeItem(idx, setSellsideLiquidity)}
+        />
 
-      {/* Submit */}
-      <div className="pt-2">
-        <button
-          type="submit"
-          className="w-full py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700"
-        >
-          Save entry
-        </button>
+        {/* Submit */}
+        <div className="pt-2">
+          <button
+            type="submit"
+            className="w-fit p-2 rounded cursor-pointer bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          >
+            Save entry
+          </button>
+        </div>
       </div>
     </form>
   );

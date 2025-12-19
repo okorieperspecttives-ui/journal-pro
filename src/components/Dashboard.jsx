@@ -5,11 +5,11 @@ import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../config/firebaseConfig";
 import Calendar from "./Calender";
-import { supabase } from "../config/supabaseClient";
+
 import EntryForm from "./EntryForm";
+import SelectedEntry from "./SelectedEntry";
 const Dashboard = () => {
-  const { user, loadingUser, selectedDate, setEntries, formModal } =
-    useAuthContext();
+  const { user, loadingUser, formModal } = useAuthContext();
 
   const handleLougout = () => {
     signOut(auth);
@@ -37,37 +37,9 @@ const Dashboard = () => {
       </>
     );
 
-  console.log(user.photoURL);
-
-  // 🔥 Function that fires on mount and whenever selectedDate changes
-  useEffect(() => {
-    const checkTrades = async () => {
-      if (!selectedDate) return;
-
-      // selectedDate should be in YYYY-MM-DD format
-      const { data, error } = await supabase
-        .from("trades")
-        .select("*")
-        .eq("created_at", selectedDate);
-
-      if (error) {
-        console.error("Error checking trades:", error.message);
-      } else {
-        if (data.length === 0) {
-          console.log(`No trades found for ${selectedDate}`);
-        } else {
-          console.log(`Found ${data.length} trades for ${selectedDate}`, data);
-          setEntries(data);
-        }
-      }
-    };
-
-    checkTrades();
-  }, [selectedDate]);
-
   return (
     <>
-      <div className="w-screen h-screen bg-transparent">
+      <div className="w-[80vw] mx-auto h-[90vh] bg-transparent">
         <header className="p-2 flex items-center gap-4">
           <h1 className="text-gray-600 bg-gray-300 backdrop-blur-2xl italic rounded-sm  w-fit p-1  text-2xl">
             jonero
@@ -98,12 +70,13 @@ const Dashboard = () => {
         </header>
 
         <div className="w-full h-full">
-          <div className="flex items-start h-full w-full gap-2 px-2">
+          <div className="flex items-start h-full w-full gap-1 px-2">
             <div className="overflow-y-scroll w-full h-full scrollbar-hide flex-2">
               <Calendar />
             </div>
             <div className="overflow-y-scroll w-full h-full scrollbar-hide pt-4 text-gray-200  flex-5">
               {formModal && <EntryForm />}
+              <SelectedEntry />
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ import AuthPage from "./pages/AuthPage";
 function App() {
   return (
     <>
-      <div className="w-screen h-screen bg-black transparent_bg">
+      <div className=" bg-black transparent_bg">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/auth" element={<AuthPage />} />
