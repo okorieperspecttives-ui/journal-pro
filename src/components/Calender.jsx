@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useAuthContext } from "../context/UseAuthContext";
 import { Pen } from "lucide-react";
 import { supabase } from "../config/supabaseClient";
+import SelectedEntry from "./SelectedEntry";
 
 const Calendar = () => {
   const today = new Date();
@@ -14,7 +15,6 @@ const Calendar = () => {
     setSelectedDate,
     entries,
     setFormModal,
-    setSelectedEntry,
     setEntries,
   } = useAuthContext();
 
@@ -134,7 +134,7 @@ const Calendar = () => {
 
           <button
             onClick={toggleFormModal}
-            className="mx-auto w-fit bg-gray-400 rounded-lg text-gray-700 cursor-pointer hover:scale-125 p-2 font-bold text-sm transition-all ease-in-out duration-700 text-center"
+            className="mx-auto w-fit bg-blue-500 rounded-lg text-white cursor-pointer hover:scale-125 p-1.5 mt-2 font-bold text-sm transition-all ease-in-out duration-700 text-center"
           >
             <Pen className="text-center" />
           </button>
@@ -148,20 +148,10 @@ const Calendar = () => {
             <div
               onClick={() => handleEntryClick(entry)}
               key={entry.id}
-              className="p-2 bg-transparent border-1 border-gray-400 rounded max-w-[100px] cursor-pointer hover:scale-110 hover:bg-gray-800 duration-500 ease-in-out transition-all text-white text-sm shadow"
+              className="sm:p-2 p-1 bg-transparent border-1 border-gray-400 rounded max-w-[100px] cursor-pointer hover:scale-110 hover:bg-gray-800 duration-500 ease-in-out transition-all text-white sm:text-sm text-xs shadow"
             >
               <p className="font-semibold">{entry.symbol}</p>
               <p className="text-[10px]">{entry.id.substring(0, 15)}</p>
-              {/* {entry.confluences?.length > 0 && (
-                <p className="text-xs">
-                  Confluences: {entry.confluences.join(", ")}
-                </p>
-              )}
-              {entry.entry_models?.length > 0 && (
-                <p className="text-xs">
-                  Entry Models: {entry.entry_models.join(", ")}
-                </p>
-              )} */}
             </div>
           ))
         ) : (

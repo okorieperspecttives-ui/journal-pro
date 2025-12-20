@@ -26,7 +26,6 @@ const Dashboard = () => {
 
   if (!loadingUser && !user)
     return (
-  
       <>
         <div className="container h-full w-full mx-auto flex items-center justify-center">
           <Link to="/auth">
@@ -40,9 +39,9 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="w-[80vw] mx-auto h-[90vh] bg-transparent">
-        <header className="p-2 flex items-center gap-4">
-          <h1 className="text-gray-600 bg-gray-300 backdrop-blur-2xl italic rounded-sm  w-fit p-1  text-2xl">
+      <div className="sm:w-[80vw] w-full mx-auto h-[90vh] bg-transparent">
+        <header className="p-2 px-4 flex items-center gap-4 bg-black/50 shadow rounded-lg w-full  ">
+          <h1 className="text-gray-400 bg-black/50 font-bold backdrop-blur-2xl italic rounded-sm  w-fit p-1  text-2xl">
             jonero
           </h1>
           <div>
@@ -70,7 +69,7 @@ const Dashboard = () => {
           )}
         </header>
 
-        <div className="w-full h-full">
+        <div className="w-full h-full ">
           <div className="flex items-start h-full w-full gap-1 px-2">
             <div className="overflow-y-scroll w-full h-full scrollbar-hide flex-2">
               <Calendar />
