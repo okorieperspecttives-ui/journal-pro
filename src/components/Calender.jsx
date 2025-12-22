@@ -16,9 +16,14 @@ const Calendar = () => {
     entries,
     setFormModal,
     setEntries,
+    selectedEntryId,
+    setSelectedEntryId,
+    setLoadingEntry,
   } = useAuthContext();
 
   const handleEntryClick = async (entry) => {
+    setLoadingEntry(true);
+    setSelectedEntryId(entry.id);
     try {
       // update the current user's preferences
       const { error: updateError } = await supabase
@@ -36,6 +41,8 @@ const Calendar = () => {
       console.log("Updated preferences with lastSelectedPairId:", entry.id);
     } catch (err) {
       console.error("Error handling entry click:", err.message);
+    } finally {
+      setLoadingEntry(false);
     }
   };
 
@@ -82,7 +89,7 @@ const Calendar = () => {
     };
 
     checkTrades();
-  }, [selectedDate]);
+  }, [selectedDate, selectedEntryId]);
 
   return (
     <div className="p-4 font-sans">

@@ -3,7 +3,7 @@ import { useAuthContext } from "../context/UseAuthContext";
 import { supabase } from "../config/supabaseClient";
 import {
   CheckCheckIcon,
-  Edit2Icon,
+  LoaderIcon,
   LucideLoader,
   Save,
   SaveAllIcon,
@@ -29,11 +29,20 @@ const normalizeToArray = (val) => {
 const prettify = (key) => key.replace(/_/g, " ");
 
 const SelectedEntry = () => {
-  const { user, selectedEntry, setSelectedEntry } = useAuthContext();
+  const {
+    user,
+    selectedEntry,
+    setSelectedEntry,
+    setSelectedEntryId,
+    selectedEntryId,
+    loadingEntry,
+    setLoadingEntry,
+  } = useAuthContext();
+
   const [editingColumn, setEditingColumn] = useState(null);
   const [newValue, setNewValue] = useState("");
-  const [loadingEntry, setLoadingEntry] = useState(true);
-
+  const [saveEdit, setSaveEdit] = useState(false);
+  const [saveAll, setSaveAll] = useState(false);
   // 🔎 On mount, fetch lastSelectedId from user preferences
   useEffect(() => {
     const fetchLastSelected = async () => {
@@ -73,16 +82,21 @@ const SelectedEntry = () => {
     };
 
     fetchLastSelected();
-  }, [user, selectedEntry]);
+  }, [user, selectedEntryId]);
 
   const handleSaveAll = async () => {
     if (!selectedEntry) return;
+    console.log(selectedEntry);
+    setSaveAll(true);
 
     // Confirmation inquiry
     const confirmed = window.confirm(
       "Are you sure you want to save this trade permanently? This action cannot be undone."
     );
-    if (!confirmed) return;
+    if (!confirmed) {
+      setSaveAll(false);
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -99,6 +113,8 @@ const SelectedEntry = () => {
       }
     } catch (err) {
       console.error("Unexpected error saving trade:", err.message);
+    } finally {
+      setSaveAll(false);
     }
   };
 
@@ -127,6 +143,7 @@ const SelectedEntry = () => {
       console.error("Unexpected error deleting trade:", err.message);
     } finally {
       setLoadingEntry(false);
+      setSelectedEntryId(null);
     }
   };
 
@@ -140,8 +157,13 @@ const SelectedEntry = () => {
   };
 
   const handleUpdate = async () => {
+    setSaveEdit(true);
+
     const v = newValue.trim();
-    if (!v || !editingColumn) return;
+    if (!v || !editingColumn) {
+      setSaveEdit(false);
+      return;
+    }
 
     const current = normalizeToArray(selectedEntry[editingColumn]);
     const updatedEntries = [...current, v];
@@ -153,13 +175,16 @@ const SelectedEntry = () => {
 
     if (error) {
       console.error("Error updating:", error.message);
+      setSaveEdit(false);
     } else {
       setSelectedEntry({ ...selectedEntry, [editingColumn]: updatedEntries });
       await refetchSelected(selectedEntry.id);
+      setSaveEdit(false);
     }
 
     setEditingColumn(null);
     setNewValue("");
+    setSaveEdit(false);
   };
 
   const renderArray = (entries) => {
@@ -209,7 +234,7 @@ const SelectedEntry = () => {
         : "bg-red-800 cursor-pointer"
     }`}
             disabled={selectedEntry.saved}
-            title={selectedEntry.saved ? "Can't edit this button anymore" : ""}
+            title={selectedEntry.saved ? "Entry is Readonly" : ""}
           >
             <Trash2Icon onClick={handleDeleteEntry} />
           </button>
@@ -222,10 +247,10 @@ const SelectedEntry = () => {
         : "bg-blue-500 cursor-pointer"
     }`}
             disabled={selectedEntry.saved}
-            title={selectedEntry.saved ? "Can't edit this entry anymore" : ""}
+            title={selectedEntry.saved ? "Entry is Readonly" : ""}
             onClick={handleSaveAll}
           >
-            <SaveAllIcon />
+            {saveAll ? <LoaderIcon /> : <SaveAllIcon />}
           </button>
         </div>
       </div>
@@ -244,7 +269,7 @@ const SelectedEntry = () => {
             <button
               disabled={selectedEntry.saved}
               onClick={() => setEditingColumn(col)}
-              title={selectedEntry.saved ? "Can't edit this entry anymore" : ""}
+              title={selectedEntry.saved ? "Entry is Readonly" : ""}
               className={`mt-2 p-1 rounded-full text-sm transition-all 
     ${
       selectedEntry.saved
@@ -286,7 +311,7 @@ const SelectedEntry = () => {
                 onClick={handleUpdate}
                 className="px-3 py-1 bg--600 rounded cursor-pointer hover:bg-blue-700 text-sm"
               >
-                <Save />
+                {saveEdit ? <LoaderIcon /> : <Save />}
               </button>
             </div>
           </div>

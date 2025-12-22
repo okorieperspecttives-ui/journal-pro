@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { supabase } from "../config/supabaseClient";
-import { DeleteIcon } from "lucide-react";
+import { DeleteIcon, LoaderIcon } from "lucide-react";
 import { useAuthContext } from "../context/UseAuthContext";
 
 const symbols = [
@@ -91,8 +91,9 @@ const AddInput = ({
 const EntryForm = ({ onSubmit }) => {
   // Scalar
   const [symbol, setSymbol] = useState("");
+  const [savingDraft, setSavingDraft] = useState(false);
 
-  const { setFormModal } = useAuthContext();
+  const { setFormModal, setSelectedEntryId } = useAuthContext();
 
   // Arrays
   const [confluences, setConfluences] = useState([]);
@@ -124,6 +125,7 @@ const EntryForm = ({ onSubmit }) => {
   };
 
   const handleSubmit = async (e) => {
+    setSavingDraft(true);
     e.preventDefault();
 
     const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
@@ -140,13 +142,17 @@ const EntryForm = ({ onSubmit }) => {
       created_at: today, // ✅ set explicitly
     };
 
-    const { data, error } = await supabase.from("trades").insert([payload]);
+    const { data, error } = await supabase
+      .from("trades")
+      .insert([payload])
+      .select();
 
     if (error) {
       console.error("Error inserting trade:", error.message);
+      setSavingDraft(false);
     } else {
       console.log("Trade saved:", data);
-
+      setSelectedEntryId(data.id);
       // Reset form
       setSymbol("");
       setConfluences([]);
@@ -156,9 +162,11 @@ const EntryForm = ({ onSubmit }) => {
       setNewsEvents([]);
       setBuysideLiquidity([]);
       setSellsideLiquidity([]);
+      setSavingDraft(false);
     }
 
     setFormModal(false);
+    setSavingDraft(false);
   };
 
   return (
@@ -284,7 +292,11 @@ const EntryForm = ({ onSubmit }) => {
             type="submit"
             className="w-fit p-2 rounded cursor-pointer bg-blue-600 text-white font-semibold hover:bg-blue-700"
           >
-            Save entry
+            {savingDraft ? (
+              <LoaderIcon className="animate-spin" />
+            ) : (
+              "  Save entry"
+            )}
           </button>
         </div>
       </div>

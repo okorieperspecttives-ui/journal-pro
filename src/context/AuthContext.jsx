@@ -12,6 +12,8 @@ export const AuthProvider = ({ children }) => {
   const [entries, setEntries] = useState([]);
   const [formModal, setFormModal] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState("");
+  const [selectedEntryId, setSelectedEntryId] = useState("");
+  const [loadingEntry, setLoadingEntry] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -35,6 +37,10 @@ export const AuthProvider = ({ children }) => {
         setFormModal,
         selectedEntry,
         setSelectedEntry,
+        selectedEntryId,
+        setSelectedEntryId,
+        loadingEntry,
+        setLoadingEntry,
       }}
     >
       {children}
