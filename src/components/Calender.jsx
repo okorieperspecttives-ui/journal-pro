@@ -19,11 +19,10 @@ const Calendar = () => {
     selectedEntryId,
     setSelectedEntryId,
     setLoadingEntry,
-    setSelectedEntry
+    setSelectedEntry,
   } = useAuthContext();
 
   const handleEntryClick = async (entry) => {
-    setSelectedEntry(null);
     setLoadingEntry(true);
     setSelectedEntryId(entry.id);
     try {
@@ -44,6 +43,7 @@ const Calendar = () => {
     } catch (err) {
       console.error("Error handling entry click:", err.message);
     } finally {
+      setSelectedEntry(null);
       setLoadingEntry(false);
     }
   };
