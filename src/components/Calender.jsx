@@ -19,9 +19,11 @@ const Calendar = () => {
     selectedEntryId,
     setSelectedEntryId,
     setLoadingEntry,
+    setSelectedEntry
   } = useAuthContext();
 
   const handleEntryClick = async (entry) => {
+    setSelectedEntry(null);
     setLoadingEntry(true);
     setSelectedEntryId(entry.id);
     try {

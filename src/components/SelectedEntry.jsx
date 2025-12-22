@@ -46,39 +46,44 @@ const SelectedEntry = () => {
   // 🔎 On mount, fetch lastSelectedId from user preferences
   useEffect(() => {
     const fetchLastSelected = async () => {
-      if (!user) {
-        setLoadingEntry(false);
+      setLoadingEntry(true); // optional: mark loading at start
+
+      try {
+        if (!user) {
+          return; // bail early if no user
+        }
+
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("preferences")
+          .eq("user_id", user.uid)
+          .single();
+
+        if (userError) {
+          throw new Error(
+            `Error fetching user preferences: ${userError.message}`
+          );
+        }
+
+        const lastId = userData?.preferences?.lastSelectedPairId;
+        if (!lastId) return;
+
+        const { data: trade, error: tradeError } = await supabase
+          .from("trades")
+          .select("*")
+          .eq("id", lastId)
+          .single();
+
+        if (tradeError) {
+          throw new Error(`Error fetching trade: ${tradeError.message}`);
+        }
+
+        setSelectedEntry(trade);
+      } catch (err) {
+        console.error(err.message);
+      } finally {
+        setLoadingEntry(false); // always executed
       }
-
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("preferences")
-        .eq("user_id", user.uid)
-        .single();
-
-      if (userError) {
-        console.error("Error fetching user preferences:", userError.message);
-        setLoadingEntry(false);
-        return;
-      }
-
-      const lastId = userData?.preferences?.lastSelectedPairId;
-      if (!lastId) return;
-
-      const { data: trade, error: tradeError } = await supabase
-        .from("trades")
-        .select("*")
-        .eq("id", lastId)
-        .single();
-
-      if (tradeError) {
-        console.error("Error fetching trade:", tradeError.message);
-        setLoadingEntry(false);
-        return;
-      }
-
-      setSelectedEntry(trade);
-      setLoadingEntry(false);
     };
 
     fetchLastSelected();
@@ -208,7 +213,7 @@ const SelectedEntry = () => {
     );
   }
 
-  if (!selectedEntry) {
+  if (!selectedEntry && !loadingEntry) {
     return <p className="mt-4 text-gray-400">No trade selected yet</p>;
   }
 
